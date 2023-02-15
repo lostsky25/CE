@@ -14,37 +14,37 @@ int main() {
     std::vector<TModel> pipes;
     std::vector<TModel> pipes_inv;
 
-    for (int i = 0; i < 10; i++)
-    {
-        std::string temp = "========";
-        int h = rand() % 12 + 6;
-        for (int j = 0; j < h; j++)
-        {
-            temp += "  ||||  ";
-        }
-
-        pipes.push_back(TModel(temp.c_str(), 8, h));
-
-    }
+    std::vector<std::string> temp;
 
     for (int i = 0; i < 10; i++)
     {
-        std::string temp = "";
+        temp.push_back("========");
         int h = rand() % 12 + 6;
         for (int j = 0; j < h; j++)
         {
-            temp += "  ||||  ";
+            temp.push_back("  ||||  ");
         }
-        temp += "========";
+    }
+    pipes.push_back(TModel(temp, strlen(temp[0].c_str()), 10));
 
-        pipes_inv.push_back(TModel(temp.c_str(), 8, h));
+    //temp.clear();
+
+    /*for (int i = 0; i < 10; i++)
+    {
+        int h = rand() % 12 + 6;
+        for (int j = 0; j < h; j++)
+        {
+            temp.push_back("  ||||  ");
+        }
+        temp.push_back("========");
+
 
     }
+    pipes_inv.push_back(TModel(temp, strlen(temp[0].c_str()), temp.size()));*/
 
-    TModel bird(
-        "|**|"\
-        "|**|",
-        4,
+    std::vector<std::string> temp2{ "|**|", "|**|" };
+    TModel bird(temp2,
+        strlen(temp[0].c_str()),
         2
     );
 
@@ -59,11 +59,11 @@ int main() {
         pipes[i].setPosition(50 + i * (rand() % 50 + 20), 50 - pipes[i].getSize().height);
     }
 
-    for (int i = 0; i < pipes_inv.size(); i++)
-    {
-        engine.addModel(&pipes_inv[i]);
-        pipes_inv[i].setPosition(50 + i * (rand() % 50 + 20), 0);
-    }
+    //for (int i = 0; i < pipes_inv.size(); i++)
+    //{
+    //    engine.addModel(&pipes_inv[i]);
+    //    pipes_inv[i].setPosition(50 + i * (rand() % 50 + 20), 0);
+    //}
 
     float x = 0;
     float y = 0;
@@ -87,13 +87,13 @@ int main() {
             }
         }
 
-        for (int i = 0; i < pipes_inv.size(); i++)
-        {
-            pipes_inv[i].move(-0.1, 0);
-            if (engine.detectCollision(bird, pipes_inv[i])) {
-                return 0;
-            }
-        }
+        //for (int i = 0; i < pipes_inv.size(); i++)
+        //{
+        //    pipes_inv[i].move(-0.1, 0);
+        //    if (engine.detectCollision(bird, pipes_inv[i])) {
+        //        return 0;
+        //    }
+        //}
 
         for (size_t i = 0; i < pipes.size(); i++)
         {
@@ -102,13 +102,12 @@ int main() {
             }
         }
 
-        for (size_t i = 0; i < pipes_inv.size(); i++)
-        {
-            if (pipes_inv[i].getPosition().x < (0 - pipes_inv[i].getSize().width)) {
-                pipes_inv[i].setPosition(50 + i * (rand() % 50 + 20), 0);
-            }
-        }
-
+        //for (size_t i = 0; i < pipes_inv.size(); i++)
+        //{
+        //    if (pipes_inv[i].getPosition().x < (0 - pipes_inv[i].getSize().width)) {
+        //        pipes_inv[i].setPosition(50 + i * (rand() % 50 + 20), 0);
+        //    }
+        //} 
 
         y += 0.01;
         engine.run();

@@ -4,6 +4,8 @@ CEngine::CEngine(int width, int height) {
     this->width = width;
     this->height = height;
 
+    hStdOut = GetStdHandle(STD_OUTPUT_HANDLE);
+
     screenBuffer = new char[width * height + 1];
 
     for (size_t i = 0; i < width * height; i++) screenBuffer[i] = ' ';
@@ -13,6 +15,16 @@ CEngine::CEngine(int width, int height) {
     SetConsoleCP(936);
     SetConsoleOutputCP(936);
     windowState = true;
+
+    //
+    ZeroMemory(&csbiex, sizeof(CONSOLE_SCREEN_BUFFER_INFOEX));
+    csbiex.cbSize = sizeof(CONSOLE_SCREEN_BUFFER_INFOEX);
+    GetConsoleScreenBufferInfoEx(hStdOut, &csbiex);
+    // Make sure we're using color#0 as background and #7 as foreground
+    csbiex.wAttributes = FOREGROUND_BLUE | FOREGROUND_GREEN | FOREGROUND_RED;
+
+    // Set blue colors scheme.
+    csbiex.ColorTable[0] = RGB(255, 255, 255);
 }
 
 void CEngine::setPixelSize(int width, int height) {
@@ -36,25 +48,22 @@ bool CEngine::getState() const {
 }
 
 void CEngine::run() {
-
-    for (size_t i = 0; i < width * height; i++) screenBuffer[i] = ' ';
+    DWORD written;
+    FillConsoleOutputCharacterA(hStdOut, ' ', width * height, { 0, 0 }, &written);
+    //for (size_t i = 0; i < width * height; i++) screenBuffer[i] = ' ';
     for (auto& model : objectsTable)
     {
-        //if ((int)model->y >= 0 && (int)model->y < (height - 1)&& (int)model->x >= 0 && (int)model->x < width) {
-
-        for (int c = 0; c < model->getLength(); c++)
+        //csbiex.ColorTable[0] = RGB(rand() % 256, rand() % 256, rand() % 256);
+        //SetConsoleScreenBufferInfoEx(hStdOut, &csbiex);
+        for (size_t i = 0; i < model->screenBuffer.size(); i++)
         {
-            if (((int)model->y + ((c - c % model->width) / model->width)) >= 0 && ((int)model->y + ((c - c % model->width) / model->width)) < height
-                && ((int)model->x + (c % model->width)) >= 0 && ((int)model->x + (c % model->width)) < width) {
-
-                screenBuffer[((int)model->y + ((c - c % model->width) / model->width)) * width + ((int)model->x + (c % model->width))] = model->screenBuffer[c];
-            }
+            WriteConsoleOutputCharacterA(hStdOut, model->screenBuffer[i].c_str(), model->width, { (short)model->x, (short)(model->y + i) }, &written);
         }
     }
 }
 
 void CEngine::render() {
-    printf(screenBuffer);
+    // ...
 }
 
 bool CEngine::detectCollision(TModel first, TModel second) {

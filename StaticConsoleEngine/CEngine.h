@@ -33,10 +33,12 @@ private:
 
 	HWND hWnd;
 	HANDLE hConOut;
+	HANDLE hStdOut;
 	CONSOLE_FONT_INFO fi;
 	CONSOLE_SCREEN_BUFFER_INFO bi;
 	CONSOLE_FONT_INFOEX cfi;
 	char* screenBuffer;
+	CONSOLE_SCREEN_BUFFER_INFOEX csbiex;
 
 	bool windowState;
 

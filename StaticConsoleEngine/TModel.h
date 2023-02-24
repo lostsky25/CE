@@ -1,6 +1,6 @@
 #pragma once
 #include <string>
-#include <vector>
+#include <Windows.h>
 
 struct Position {
 	float x;
@@ -15,7 +15,7 @@ struct Size {
 class TModel
 {
 public:
-	TModel(std::vector<std::string>, int, int);
+	TModel(CHAR_INFO*, int, int, int);
 	void setPosition(int, int);
 	Position getPosition();
 	Size getSize();
@@ -23,7 +23,7 @@ public:
 	unsigned getLength() const;
 
 private:
-	std::vector<std::string> screenBuffer;
+	CHAR_INFO* screenBuffer;
 
 	int width;
 	int height;
@@ -32,7 +32,6 @@ private:
 
 	float x = 0;
 	float y = 0;
-
 
 	friend class CEngine;
 };

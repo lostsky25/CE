@@ -6,25 +6,16 @@ CEngine::CEngine(int width, int height) {
 
     hStdOut = GetStdHandle(STD_OUTPUT_HANDLE);
 
-    screenBuffer = new char[width * height + 1];
+    screenBuffer = new CHAR_INFO[width * height + 1];
 
-    for (size_t i = 0; i < width * height; i++) screenBuffer[i] = ' ';
+    for (size_t i = 0; i < width * height; i++) screenBuffer[i].Char.UnicodeChar = ' ';
+    //for (size_t i = 0; i < width * height; i++) screenBuffer[i].Attributes = FOREGROUND_INTENSITY | BACKGROUND_RED | BACKGROUND_GREEN | BACKGROUND_INTENSITY;
+
     SetConsoleSize(width, height);
-    screenBuffer[width * height] = '\0';
-    // To read/write Chinese characters, we set code page to 936.
+    //screenBuffer[width * height] = '\0';
     SetConsoleCP(936);
     SetConsoleOutputCP(936);
     windowState = true;
-
-    //
-    ZeroMemory(&csbiex, sizeof(CONSOLE_SCREEN_BUFFER_INFOEX));
-    csbiex.cbSize = sizeof(CONSOLE_SCREEN_BUFFER_INFOEX);
-    GetConsoleScreenBufferInfoEx(hStdOut, &csbiex);
-    // Make sure we're using color#0 as background and #7 as foreground
-    csbiex.wAttributes = FOREGROUND_BLUE | FOREGROUND_GREEN | FOREGROUND_RED;
-
-    // Set blue colors scheme.
-    csbiex.ColorTable[0] = RGB(255, 255, 255);
 }
 
 void CEngine::setPixelSize(int width, int height) {
@@ -34,8 +25,8 @@ void CEngine::setPixelSize(int width, int height) {
     cfi.dwFontSize.Y = height;                  // Height
     cfi.FontFamily = FF_DONTCARE;
     cfi.FontWeight = FW_NORMAL;
-    std::wcscpy(cfi.FaceName, L"Consolas"); // Choose your font
-    SetCurrentConsoleFontEx(GetStdHandle(STD_OUTPUT_HANDLE), FALSE, &cfi);
+    std::wcscpy(cfi.FaceName, L"Times New Roman"); // Choose your font
+    SetCurrentConsoleFontEx(hStdOut, FALSE, &cfi);
 
 }
 
@@ -48,22 +39,35 @@ bool CEngine::getState() const {
 }
 
 void CEngine::run() {
-    DWORD written;
-    FillConsoleOutputCharacterA(hStdOut, ' ', width * height, { 0, 0 }, &written);
+
     //for (size_t i = 0; i < width * height; i++) screenBuffer[i] = ' ';
     for (auto& model : objectsTable)
     {
-        //csbiex.ColorTable[0] = RGB(rand() % 256, rand() % 256, rand() % 256);
-        //SetConsoleScreenBufferInfoEx(hStdOut, &csbiex);
-        for (size_t i = 0; i < model->screenBuffer.size(); i++)
+        //if ((int)model->y >= 0 && (int)model->y < (height - 1)&& (int)model->x >= 0 && (int)model->x < width) {
+
+        for (int c = 0; c < model->getLength(); c++)
         {
-            WriteConsoleOutputCharacterA(hStdOut, model->screenBuffer[i].c_str(), model->width, { (short)model->x, (short)(model->y + i) }, &written);
+            if (((int)model->y + ((c - c % model->width) / model->width)) >= 0 && ((int)model->y + ((c - c % model->width) / model->width)) < height
+                && ((int)model->x + (c % model->width)) >= 0 && ((int)model->x + (c % model->width)) < width) {
+
+                screenBuffer[((int)model->y + ((c - c % model->width) / model->width)) * width + ((int)model->x + (c % model->width))].Char.UnicodeChar = model->screenBuffer[c].Char.UnicodeChar;
+            }
         }
     }
 }
-
 void CEngine::render() {
-    // ...
+    current_ticks = clock();
+    SMALL_RECT m_rectWindow;
+    m_rectWindow = { 0, 0, (short)50, (short)50 };
+    SetConsoleWindowInfo(hStdOut, TRUE, &m_rectWindow);
+    //WriteConsole(hStdOut, screenBuffer, wcslen(screenBuffer), NULL, NULL); 
+    WriteConsoleOutputW(hStdOut, screenBuffer, { (short)width, (short)height }, { (short)0, (short)0 }, &m_rectWindow);
+    delta_ticks = clock() - current_ticks;
+    if (delta_ticks > 0)
+        fps = CLOCKS_PER_SEC / delta_ticks;
+
+    sprintf(windowTitle, "FPS: %ld", fps);
+    SetWindowTextA(GetConsoleWindow(), windowTitle);
 }
 
 bool CEngine::detectCollision(TModel first, TModel second) {
@@ -100,16 +104,16 @@ BOOL CEngine::SetConsoleSize(int cols, int rows) {
     hWnd = GetConsoleWindow();
 
     if (hWnd) {
-        hConOut = GetStdHandle(STD_OUTPUT_HANDLE);
-        if (hConOut && hConOut != (HANDLE)-1) {
-            if (GetCurrentConsoleFont(hConOut, FALSE, &fi)) {
+        hStdOut = GetStdHandle(STD_OUTPUT_HANDLE);
+        if (hStdOut && hStdOut != (HANDLE)-1) {
+            if (GetCurrentConsoleFont(hStdOut, FALSE, &fi)) {
                 if (GetClientRect(hWnd, &rect)) {
                     w = rect.right - rect.left;
                     h = rect.bottom - rect.top;
                     if (GetWindowRect(hWnd, &rect)) {
                         bw = rect.right - rect.left - w;
                         bh = rect.bottom - rect.top - h;
-                        if (GetConsoleScreenBufferInfo(hConOut, &bi)) {
+                        if (GetConsoleScreenBufferInfo(hStdOut, &bi)) {
                             coord.X = bi.dwSize.X;
                             coord.Y = bi.dwSize.Y;
                             if (coord.X < cols || coord.Y < rows) {
@@ -119,7 +123,7 @@ BOOL CEngine::SetConsoleSize(int cols, int rows) {
                                 if (coord.Y < rows) {
                                     coord.Y = rows;
                                 }
-                                if (!SetConsoleScreenBufferSize(hConOut, coord)) {
+                                if (!SetConsoleScreenBufferSize(hStdOut, coord)) {
                                     return FALSE;
                                 }
                             }

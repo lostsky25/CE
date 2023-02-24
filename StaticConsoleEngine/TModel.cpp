@@ -1,11 +1,11 @@
 #include "TModel.h"
 
-TModel::TModel(std::vector<std::string> symbols, int width, int height) {
+TModel::TModel(CHAR_INFO* symbols, int length, int width, int height) {
 	screenBuffer = symbols;
 
 	this->width = width;
 	this->height = height;
-	//length = strlen(symbols);
+	length = length;
 }
 
 void TModel::setPosition(int x, int y) {

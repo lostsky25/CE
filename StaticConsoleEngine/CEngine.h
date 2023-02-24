@@ -31,14 +31,15 @@ private:
 	int width;
 	int height;
 
+	char windowTitle[50];
+	clock_t current_ticks, delta_ticks;
+	clock_t fps = 0;
 	HWND hWnd;
-	HANDLE hConOut;
 	HANDLE hStdOut;
 	CONSOLE_FONT_INFO fi;
 	CONSOLE_SCREEN_BUFFER_INFO bi;
 	CONSOLE_FONT_INFOEX cfi;
-	char* screenBuffer;
-	CONSOLE_SCREEN_BUFFER_INFOEX csbiex;
+	CHAR_INFO* screenBuffer;
 
 	bool windowState;
 
